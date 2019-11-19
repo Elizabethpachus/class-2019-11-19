@@ -1,0 +1,58 @@
+---
+title: "class"
+author: "Lewis Zou"
+date: "11/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(skimr)
+```
+
+
+```{r, cache = TRUE}
+download.file("https://github.com/TheUpshot/2018-live-poll-results/archive/master.zip", destfile = "data.zip")
+
+unzip("data.zip")
+
+```
+
+
+```{r}
+my_list <- fs::dir_ls("2018-live-poll-results-master/data/")
+  
+raw <- map_dfr(my_list, read_csv, .id = "source", col_types = cols(
+                                              .default = col_character(),
+                                              turnout_scale = col_double(),
+                                              turnout_score = col_double(),
+                                              w_LV = col_double(),
+                                              w_RV = col_double(),
+                                              final_weight = col_double(),
+                                              timestamp = col_datetime(format = "")
+                                            ))
+
+
+```
+
+```{r}
+x <- raw %>%
+  mutate(female = ifelse(gender == "Female", 1, 0)) %>%
+  mutate(dvote = ifelse(response == "Dem", 1, 0)) %>%
+  select(dvote, female, response, gender)
+```
+
+```{r}
+ggplot(x, aes(female, dvote)) + geom_jitter(width = .1, height = .1) + geom_smooth(method = "lm")
+
+```
+
+
+```{r}
+fs::file_delete(c("data.zip", "2018-live-poll-results-master/"))
+```
+
+
+
