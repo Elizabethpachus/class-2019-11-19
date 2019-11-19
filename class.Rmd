@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 
 library(tidyverse)
+library(broom)
+library(infer)
 library(skimr)
 ```
 
@@ -45,13 +47,54 @@ x <- raw %>%
 ```
 
 ```{r}
-ggplot(x, aes(female, dvote)) + geom_jitter(width = .1, height = .1) + geom_smooth(method = "lm")
+
+# Relationship between dvote and female
+
+ggplot(x, aes(female, dvote)) + geom_jitter(width = .1, height = .1) + geom_smooth(method = "glm")
+
+# How can I use the model with the new data?
+
+glm_obj <- glm(dvote ~ female, data = x, family = "binomial") 
+
+# What is the female coefficient?
+
+# Slight positive correlation between female and dvote, women are more likely than men to vote democratic
+
+# Note that this is not a linear model
+
+# Rule of four, you can divide the log regression by four to get the degree of change
+
+# What is the meaning of the negative logarithmic intercept??
+
 
 ```
 
 
+
 ```{r}
+
+test <- glm_obj %>% 
+  tidy()
+
+test
+test[2,2]
+
+my_data <- tibble(female = c(0,0, 1,1,0,0,0))
+
+predict.glm(glm_obj, newdata = my_data, type = "response")
+
+
+my_data2 <- x %>% 
+  mutate(prob = predict.glm(glm_obj, type = "response"))
+
+my_data2
+
+```
+
+```{r}
+
 fs::file_delete(c("data.zip", "2018-live-poll-results-master/"))
+
 ```
 
 
